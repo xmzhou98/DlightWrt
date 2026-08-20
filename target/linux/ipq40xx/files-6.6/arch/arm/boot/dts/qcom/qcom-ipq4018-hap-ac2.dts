@@ -21,6 +21,8 @@
 	};
 
 	aliases {
+		// TODO: Verify if the ethernet0 alias is needed
+		ethernet0 = &gmac;
 		led-boot = &led_user;
 		led-failsafe = &led_user;
 		led-running = &led_user;
@@ -153,7 +155,7 @@
 	flash@0 {
 		reg = <0>;
 		compatible = "jedec,spi-nor";
-		spi-max-frequency = <40000000>;
+		spi-max-frequency = <24000000>;
 
 		partitions {
 			compatible = "fixed-partitions";

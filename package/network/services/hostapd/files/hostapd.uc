@@ -10,6 +10,7 @@ hostapd.data.pending_config = {};
 hostapd.data.file_fields = {
 	vlan_file: true,
 	wpa_psk_file: true,
+	sae_password_file: true,
 	accept_mac_file: true,
 	deny_mac_file: true,
 	eap_user_file: true,
@@ -186,7 +187,7 @@ function __iface_pending_next(pending, state, ret, data)
 
 		pending.call("wpa_supplicant", "phy_status", {
 			phy: phydev.phy,
-			radio: phydev.radio,
+			radio: phydev.radio ?? -1,
 		});
 		return "check_phy";
 	case "check_phy":
@@ -199,7 +200,7 @@ function __iface_pending_next(pending, state, ret, data)
 		}
 		pending.call("wpa_supplicant", "phy_set_state", {
 			phy: phydev.phy,
-			radio: phydev.radio,
+			radio: phydev.radio ?? -1,
 			stop: true
 		});
 		return "wpas_stopped";
@@ -208,7 +209,7 @@ function __iface_pending_next(pending, state, ret, data)
 			hostapd.printf(`hostapd.add_iface failed for phy ${phy} ifname=${bss.ifname}`);
 		pending.call("wpa_supplicant", "phy_set_state", {
 			phy: phydev.phy,
-			radio: phydev.radio,
+			radio: phydev.radio ?? -1,
 			stop: false
 		});
 		return null;
@@ -278,6 +279,7 @@ function iface_macaddr_init(phydev, config, macaddr_list)
 {
 	let macaddr_data = {
 		num_global: config.num_global_macaddr ?? 1,
+		macaddr_base: config.macaddr_base,
 		mbssid: config.mbssid ?? 0,
 	};
 
@@ -364,6 +366,7 @@ function bss_remove_file_fields(config)
 	for (let key in config.hash)
 		new_cfg.hash[key] = config.hash[key];
 	delete new_cfg.hash.wpa_psk_file;
+	delete new_cfg.hash.sae_password_file;
 	delete new_cfg.hash.vlan_file;
 
 	return new_cfg;
@@ -482,7 +485,9 @@ function iface_reload_config(name, phydev, config, old_config)
 
 		// try to preserve MAC address of this BSS by reassigning another
 		// BSS if necessary
-		if (cur_config.default_macaddr &&
+		if ((cur_config.default_macaddr || cur_config.random_macaddr) &&
+		    cur_config.random_macaddr == prev_config.random_macaddr &&
+		    cur_config.default_macaddr == prev_config.default_macaddr &&
 		    !macaddr_list[prev_config.bssid]) {
 			macaddr_list[prev_config.bssid] = i;
 			cur_config.bssid = prev_config.bssid;
@@ -745,9 +750,12 @@ function iface_load_config(phy, radio, filename)
 			continue;
 		}
 
-		if (val[0] == "#num_global_macaddr" ||
-		    val[0] == "mbssid")
+		if (val[0] == "#num_global_macaddr")
 			config[substr(val[0], 1)] = int(val[1]);
+		else if (val[0] == "#macaddr_base")
+			config[substr(val[0], 1)] = val[1];
+		else if (val[0] == "mbssid")
+			config[val[0]] = int(val[1]);
 
 		push(config.radio.data, line);
 	}
@@ -755,6 +763,8 @@ function iface_load_config(phy, radio, filename)
 	while ((line = rtrim(f.read("line"), "\n")) != null) {
 		if (line == "#default_macaddr")
 			bss.default_macaddr = true;
+		if (line == "#random_macaddr")
+			bss.random_macaddr = true;
 
 		let val = split(line, "=", 2);
 		if (!val[0])
@@ -827,7 +837,7 @@ let main_obj = {
 			let phy_list = req.args.phy ? [ phy_name(req.args.phy, req.args.radio) ] : keys(hostapd.data.config);
 			for (let phy_name in phy_list) {
 				let phy = hostapd.data.config[phy_name];
-				let config = iface_load_config(phy.phy, radio, phy.orig_file);
+				let config = iface_load_config(phy.phy, phy.radio_idx, phy.orig_file);
 				iface_set_config(phy_name, config);
 			}
 

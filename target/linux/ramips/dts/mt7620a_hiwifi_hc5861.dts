@@ -88,12 +88,6 @@
 	mediatek,ephy-base = /bits/ 8 <12>;
 };
 
-&mmc_reg_3v3 {
-	/delete-property/ enable-active-high;
-
-	gpios = <&gpio0 8 GPIO_ACTIVE_LOW>;
-};
-
 &pcie {
 	status = "okay";
 };
@@ -108,8 +102,8 @@
 	};
 };
 
-&sdhci {
-	max-frequency = <24000000>;
+&reg_vmmc {
+	gpios = <&gpio0 8 GPIO_ACTIVE_LOW>;
 };
 
 &wmac {

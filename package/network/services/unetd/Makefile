@@ -10,9 +10,9 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=unetd
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL=$(PROJECT_GIT)/project/unetd.git
-PKG_SOURCE_DATE:=2024-12-16
-PKG_SOURCE_VERSION:=e4a24cdfbc1cbdb38f1958440f2a06529df1c7f4
-PKG_MIRROR_HASH:=1959170b25be07b06c198bfd1e072b7ed19b930faad0e886acb6b0d719d25ed1
+PKG_SOURCE_DATE:=2025-03-09
+PKG_SOURCE_VERSION:=6c9c8fbd81285a2cba7dd1c2c1ac2bf25ca99e27
+PKG_MIRROR_HASH:=9dc06c945713a6a289ed0838ebe59e65b4fbb333e02d5159a8e87d29754808a6
 
 PKG_LICENSE:=GPL-2.0
 PKG_MAINTAINER:=Felix Fietkau <nbd@nbd.name>
@@ -32,7 +32,7 @@ define Package/unetd
   SECTION:=net
   CATEGORY:=Network
   TITLE:=WireGuard based VPN connection manager for OpenWrt
-  DEPENDS:=+libubox +libubus +libblobmsg-json +libnl-tiny +kmod-wireguard +UNETD_VXLAN_SUPPORT:libbpf
+  DEPENDS:=+libubox +libubus +libudebug +libblobmsg-json +libnl-tiny +kmod-wireguard +UNETD_VXLAN_SUPPORT:libbpf
 endef
 
 define Package/unetd/config
@@ -40,6 +40,7 @@ define Package/unetd/config
 		bool "VXLAN support"
 		depends on PACKAGE_unetd
 		depends on HAS_BPF_TOOLCHAIN
+		select NEED_BPF_TOOLCHAIN
 		default y
 
 endef

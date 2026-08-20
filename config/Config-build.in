@@ -176,6 +176,7 @@ menu "Global build settings"
 	config MOLD
 		depends on (aarch64 || arm || i386 || i686 || m68k || powerpc || powerpc64 || sh4 || x86_64)
 		depends on !GCC_USE_VERSION_11
+		depends on !HOST_OS_MACOS
 		def_bool $(shell, ./config/check-hostcxx.sh 10 2 12)
 
 	config USE_MOLD
@@ -423,11 +424,11 @@ menu "Global build settings"
 
 	endchoice
 
-	config SECCOMP
+	config USE_SECCOMP
 		bool "Enable SECCOMP"
 		select KERNEL_SECCOMP
 		select PACKAGE_procd-seccomp
-		depends on (aarch64 || arm || armeb || mips || mipsel || mips64 || mips64el || i386 || powerpc || x86_64)
+		depends on (aarch64 || arm || armeb || mips || mipsel || mips64 || mips64el || i386 || loongarch64 || powerpc || x86_64)
 		depends on !TARGET_uml
 		default y
 		help

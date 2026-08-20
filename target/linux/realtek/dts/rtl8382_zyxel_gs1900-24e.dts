@@ -1,10 +1,21 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "rtl8380_zyxel_gs1900.dtsi"
+#include "rtl8380_zyxel_gs1900_gpio.dtsi"
 
 / {
 	compatible = "zyxel,gs1900-24e", "realtek,rtl838x-soc";
 	model = "Zyxel GS1900-24E";
+};
+
+&gpio0 {
+	/* Shared between the main and aux MDIO busses */
+	mdio_reset {
+		gpio-hog;
+		gpios = <1 GPIO_ACTIVE_LOW>;
+		output-low;
+		line-name = "mdio-reset";
+	};
 };
 
 &mdio {
